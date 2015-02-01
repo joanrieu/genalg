@@ -1,26 +1,15 @@
 package net.fififox.genalg.samples;
 
 import net.fififox.genalg.GeneticSolver;
-import net.fififox.genalg.GeneticSolver.Individual;
 
 public class Samples {
 
 	public static void main(String[] args) {
-		run(HelloWorld.class);
-		// run(TravellingSalesman.class);
-	}
-
-	public static void run(Class<? extends GeneticSolver.Individual> c) {
 		GeneticSolver solver = new GeneticSolver(200, 1, .2);
-		for (int i = 0; i < solver.selectedPopulation; ++i) {
-			try {
-				solver.population.add(c.newInstance());
-			} catch (InstantiationException | IllegalAccessException e) {
-				e.printStackTrace();
-			}
-		}
-		Individual bestFit = solver.getPlateauFit(500, 10000);
-		System.out.println(bestFit);
+		String solution = "An exponential moving average is a type of infinite impulse response filter that applies weighting factors which decrease exponentially";
+		for (int i = 0; i < solver.selectedPopulation; ++i)
+			solver.population.add(new StringFinder(solution));
+		System.err.println(((StringFinder) solver.getPlateauFit(100, 10000))
+				.isSolution() ? "CORRECT" : "FAILURE");
 	}
-
 }

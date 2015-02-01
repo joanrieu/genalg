@@ -9,19 +9,14 @@ public class GeneticSolver {
 
 	public static interface Individual {
 
-		boolean isSameAs(Individual o);
-
 		Individual mutate();
 
 		Individual cross(Individual o);
-
-		void die();
 
 	}
 
 	public SortedSet<Individual> population;
 	public List<Individual> newborns = new LinkedList<>();
-	public int iteration = 0;
 
 	public int selectedPopulation;
 	public double mutationProbability;
@@ -38,21 +33,21 @@ public class GeneticSolver {
 	public Individual getPlateauFit(int waitIterations, int maxIterations) {
 		Individual best = null;
 		int wait = 0;
-		while (wait < waitIterations && maxIterations-- > 0) {
+		for (int i = 0; i < maxIterations && wait < waitIterations; ++i) {
 			step();
-			if (!population.first().isSameAs(best)) {
+			System.err.print("\r" + population.first());
+			if (!population.first().equals(best)) {
 				best = population.first();
 				wait = 0;
 			} else {
 				++wait;
 			}
 		}
+		System.err.println();
 		return best;
 	}
 
 	public void step() {
-		dump();
-		++iteration;
 		mutate();
 		cross();
 		select();
@@ -75,22 +70,15 @@ public class GeneticSolver {
 
 	private void cross() {
 		final double probability = crossoverProbability * crossoverProbability;
-		population.forEach(i1 -> {
-			if (Math.random() < probability) {
-				population.forEach(i2 -> {
+		for (Individual i1 : population)
+			if (Math.random() < probability)
+				for (Individual i2 : population)
 					if (Math.random() < probability)
 						addNewborn(i1.cross(i2));
-				});
-			}
-		});
 	}
 
 	private synchronized void addNewborn(Individual individual) {
 		newborns.add(individual);
-	}
-
-	private void dump() {
-		System.err.println("[" + iteration + "] " + population.first());
 	}
 
 }
