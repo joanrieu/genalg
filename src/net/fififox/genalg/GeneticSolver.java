@@ -1,6 +1,5 @@
 package net.fififox.genalg;
 
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.SortedSet;
@@ -12,33 +11,17 @@ public class GeneticSolver {
 
 		boolean isSameAs(Individual o);
 
-		double getFitness();
-
 		Individual mutate();
 
 		Individual cross(Individual o);
-
-		long getGeneration();
 
 		void die();
 
 	}
 
-	public class IndividualComparator implements Comparator<Individual> {
-		@Override
-		public int compare(Individual o1, Individual o2) {
-			int c = Double.compare(o1.getFitness(), o2.getFitness());
-			if (c != 0)
-				return -c;
-			c = Long.compare(o1.getGeneration(), o2.getGeneration());
-			if (c != 0)
-				return -c;
-			return Integer.compare(hashCode(), o2.hashCode());
-		}
-	}
-
 	public SortedSet<Individual> population;
-	public List<Individual> newborns;
+	public List<Individual> newborns = new LinkedList<>();
+	public int iteration = 0;
 
 	public int selectedPopulation;
 	public double mutationProbability;
@@ -46,21 +29,10 @@ public class GeneticSolver {
 
 	public GeneticSolver(int selectedPopulation, double mutationProbability,
 			double crossoverProbability) {
+		population = new TreeSet<>();
 		this.selectedPopulation = selectedPopulation;
 		this.mutationProbability = mutationProbability;
 		this.crossoverProbability = crossoverProbability;
-		IndividualComparator comparator = new IndividualComparator();
-		population = new TreeSet<>(comparator);
-		newborns = new LinkedList<>();
-	}
-
-	public Individual getBestFit(double fitnessGoal, int maxIterations) {
-		while (population.first().getFitness() < fitnessGoal
-				&& maxIterations-- > 0) {
-			step();
-			dumpBestFit(maxIterations);
-		}
-		return population.first();
 	}
 
 	public Individual getPlateauFit(int waitIterations, int maxIterations) {
@@ -68,18 +40,19 @@ public class GeneticSolver {
 		int wait = 0;
 		while (wait < waitIterations && maxIterations-- > 0) {
 			step();
-			if (best == null || !population.first().isSameAs(best)) {
+			if (!population.first().isSameAs(best)) {
 				best = population.first();
 				wait = 0;
 			} else {
 				++wait;
 			}
-			dumpBestFit(maxIterations);
 		}
 		return best;
 	}
 
 	public void step() {
+		dump();
+		++iteration;
 		mutate();
 		cross();
 		select();
@@ -101,13 +74,12 @@ public class GeneticSolver {
 	}
 
 	private void cross() {
-		double probability = crossoverProbability * crossoverProbability;
+		final double probability = crossoverProbability * crossoverProbability;
 		population.forEach(i1 -> {
 			if (Math.random() < probability) {
 				population.forEach(i2 -> {
-					if (Math.random() < probability) {
+					if (Math.random() < probability)
 						addNewborn(i1.cross(i2));
-					}
 				});
 			}
 		});
@@ -117,8 +89,8 @@ public class GeneticSolver {
 		newborns.add(individual);
 	}
 
-	private void dumpBestFit(int iterations) {
-		System.err.println("[" + iterations + "] " + population.first());
+	private void dump() {
+		System.err.println("[" + iteration + "] " + population.first());
 	}
 
 }

@@ -3,32 +3,43 @@ package net.fififox.genalg.samples;
 import net.fififox.genalg.GeneticSolver;
 import net.fififox.genalg.GeneticSolver.Individual;
 
-public class HelloWorld implements GeneticSolver.Individual {
+public class HelloWorld implements GeneticSolver.Individual,
+		Comparable<HelloWorld> {
 
 	private static final String solution = "An exponential moving average is a type of infinite impulse response filter that applies weighting factors which decrease exponentially";
 	private String current;
-	private long generation;
 
 	public HelloWorld() {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < solution.length(); ++i)
 			builder.append(randomChar());
 		current = builder.toString();
-		generation = 1;
 	}
 
-	public HelloWorld(StringBuilder builder, long generation) {
+	public HelloWorld(StringBuilder builder) {
 		current = builder.toString();
-		this.generation = generation;
 	}
 
 	@Override
 	public boolean isSameAs(Individual o) {
-		return current.equals(((HelloWorld) o).current);
+		return o instanceof Individual
+				&& current.equals(((HelloWorld) o).current);
 	}
 
 	@Override
-	public double getFitness() {
+	public int compareTo(HelloWorld o) {
+		final int a = getPoints(), b = o.getPoints();
+		if (a != b)
+			return b - a;
+		return current.compareTo(o.current);
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof Individual && compareTo((HelloWorld) obj) == 0;
+	}
+
+	public int getPoints() {
 		int points = 0;
 		for (int i = 0; i < current.length(); ++i) {
 			char c = current.charAt(i);
@@ -37,7 +48,7 @@ public class HelloWorld implements GeneticSolver.Individual {
 			if (solution.indexOf(c) != -1)
 				++points;
 		}
-		return 1 - 1. / (1 + points);
+		return points;
 	}
 
 	@Override
@@ -45,7 +56,7 @@ public class HelloWorld implements GeneticSolver.Individual {
 		StringBuilder builder = new StringBuilder(current);
 		builder.setCharAt((int) (Math.random() * current.length()),
 				randomChar());
-		return new HelloWorld(builder, generation + 1);
+		return new HelloWorld(builder);
 	}
 
 	@Override
@@ -54,12 +65,7 @@ public class HelloWorld implements GeneticSolver.Individual {
 		for (int i = 0; i < current.length(); ++i)
 			if (Math.random() < .5)
 				builder.setCharAt(i, ((HelloWorld) o).current.charAt(i));
-		return new HelloWorld(builder, generation + 1);
-	}
-
-	@Override
-	public long getGeneration() {
-		return generation;
+		return new HelloWorld(builder);
 	}
 
 	@Override
@@ -68,7 +74,7 @@ public class HelloWorld implements GeneticSolver.Individual {
 
 	@Override
 	public String toString() {
-		return current + "<" + getFitness() + "|" + getGeneration() + ">";
+		return current;
 	}
 
 	private char randomChar() {
